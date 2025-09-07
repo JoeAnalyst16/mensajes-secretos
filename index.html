@@ -72,7 +72,7 @@
 
     <div class="w-full max-w-md mx-auto rounded-xl p-6 md:p-8 space-y-6 container-panel">
         
-        <div class="demo-mode text-black p-3 rounded-lg text-center text-sm font-bold animate-pulse">
+        <div id="status-message" class="demo-mode text-black p-3 rounded-lg text-center text-sm font-bold animate-pulse">
             🚨 MODO DEMO - Protocolo de Comunicación Desconectado 🚨
         </div>
         
@@ -93,12 +93,12 @@
             <div>
                 <label for="recipientId" class="block text-sm font-medium text-gray-400 mb-2">Código del Receptor</label>
                 <input type="text" id="recipientId" required placeholder="Ingresa el código del receptor..."
-                       class="w-full bg-gray-800 rounded-md px-3 py-2 text-white placeholder-gray-500 border border-gray-700 input-glow">
+                        class="w-full bg-gray-800 rounded-md px-3 py-2 text-white placeholder-gray-500 border border-gray-700 input-glow">
             </div>
             <div>
                 <label for="messageText" class="block text-sm font-medium text-gray-400 mb-2">Mensaje encriptado</label>
                 <textarea id="messageText" required rows="4" placeholder="Escribe tu mensaje... no dejes rastro."
-                          class="w-full bg-gray-800 rounded-md px-3 py-2 text-white placeholder-gray-500 border border-gray-700 input-glow"></textarea>
+                            class="w-full bg-gray-800 rounded-md px-3 py-2 text-white placeholder-gray-500 border border-gray-700 input-glow"></textarea>
             </div>
             <button type="submit"
                     class="w-full btn-send text-white font-bold py-3 px-4 rounded-lg shadow-xl hover:scale-105">
@@ -119,65 +119,15 @@
     </div>
 
     <script type="module">
-        // El resto del código JS permanece igual
-        class MockFirebase {
-            constructor() {
-                this.messages = [];
-                this.currentUser = null;
-                this.listeners = [];
-            }
-            initializeApp(config) { return Promise.resolve(this); }
-            getAuth() {
-                const self = this;
-                return {
-                    signInAnonymously: () => {
-                        self.currentUser = { uid: 'fantasma-' + Math.random().toString(36).substr(2, 9) };
-                        return Promise.resolve({ user: self.currentUser });
-                    },
-                    onAuthStateChanged: (callback) => {
-                        self.authCallback = callback;
-                        setTimeout(() => callback(self.currentUser), 100);
-                    }
-                };
-            }
-            getFirestore() {
-                const self = this;
-                return {
-                    collection: (path) => ({
-                        addDoc: (data) => {
-                            const message = { ...data, id: Date.now().toString(), timestamp: new Date() };
-                            self.messages.push(message);
-                            self.notifyListeners();
-                            return Promise.resolve({ id: message.id });
-                        }
-                    }),
-                    query: () => ({}),
-                    where: () => ({}),
-                    onSnapshot: (query, callback) => {
-                        self.listeners.push(callback);
-                        callback({ docChanges: () => [] });
-                    }
-                };
-            }
-            notifyListeners() {
-                setTimeout(() => {
-                    this.listeners.forEach(listener => {
-                        const relevantMessages = this.messages.filter(msg =>
-                            msg.recipientId === this.currentUser?.uid
-                        ).map(msg => ({
-                            type: 'added',
-                            doc: { id: msg.id, data: () => msg }
-                        }));
-                        if (relevantMessages.length > 0) {
-                            listener({ docChanges: () => relevantMessages });
-                        }
-                    });
-                }, 1000);
-            }
-        }
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const mockFirebase = new MockFirebase();
-        
+        // Variables globales proporcionadas por el entorno de Canvas
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
         let app, auth, db, currentUserId;
         const userIdElement = document.getElementById('userId');
         const loadingSpinner = document.getElementById('loading-spinner');
@@ -187,27 +137,39 @@
         const messagesContainer = document.getElementById('messagesContainer');
         const noMessagesElement = document.getElementById('no-messages');
         const toastNotification = document.getElementById('toast-notification');
+        const statusMessage = document.getElementById('status-message');
 
         async function initialize() {
             try {
-                app = await mockFirebase.initializeApp({});
-                auth = mockFirebase.getAuth();
-                db = mockFirebase.getFirestore();
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
                 
-                auth.onAuthStateChanged(async (user) => {
+                // Muestra un mensaje de conexión
+                statusMessage.textContent = 'Conectando con el Servidor...';
+
+                // Autentica al usuario
+                onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUserId = user.uid;
                         displayUserId();
                         listenForMessages();
+                        statusMessage.classList.add('hidden'); // Oculta el mensaje de demo
+                    } else if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
                     } else {
-                        await auth.signInAnonymously();
+                        await signInAnonymously(auth);
                     }
                 });
+
             } catch (error) {
                 console.error("Error al inicializar:", error);
                 userIdElement.textContent = "Error de enlace.";
                 userIdElement.classList.remove('hidden');
                 loadingSpinner.classList.add('hidden');
+                statusMessage.textContent = '❌ Fallo en la conexión. Revisa las reglas de seguridad.';
+                statusMessage.classList.remove('demo-mode');
+                statusMessage.style.backgroundColor = 'rgba(220, 38, 38, 0.8)';
             }
         }
 
@@ -215,6 +177,16 @@
             userIdElement.textContent = currentUserId;
             loadingSpinner.classList.add('hidden');
             userIdElement.classList.remove('hidden');
+            
+            userIdElement.onclick = () => {
+                const textToCopy = userIdElement.textContent;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showToast('ID copiado al portapapeles.');
+                }).catch(err => {
+                    showToast('Error al copiar el ID.', true);
+                    console.error('Failed to copy text: ', err);
+                });
+            };
         }
         
         function showToast(message, isError = false) {
@@ -232,8 +204,7 @@
             if (!recipientId || !text || !currentUserId) { showToast("Completa los campos para la transmisión.", true); return; }
             if (recipientId === currentUserId) { showToast("No puedes comunicarte contigo mismo.", true); return; }
             try {
-                const collection = db.collection('messages');
-                await collection.addDoc({
+                await addDoc(collection(db, `artifacts/${appId}/public/data/messages`), {
                     senderId: currentUserId,
                     recipientId: recipientId,
                     text: text,
@@ -249,13 +220,22 @@
 
         function listenForMessages() {
             if (!currentUserId) return;
-            const query = db.query(db.collection('messages'), db.where("recipientId", "==", currentUserId));
-            db.onSnapshot(query, (snapshot) => {
+            const q = query(
+                collection(db, `artifacts/${appId}/public/data/messages`),
+                where("recipientId", "==", currentUserId)
+            );
+            
+            onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach(async (change) => {
                     if (change.type === "added") {
                         const messageData = change.doc.data();
                         if (noMessagesElement) { noMessagesElement.style.display = 'none'; }
                         displayMessage(messageData);
+                        
+                        // Elimina el mensaje después de un tiempo para el efecto "fantasma"
+                        setTimeout(async () => {
+                           // No eliminamos el mensaje para mantener el historial
+                        }, 120000); // 2 minutos
                     }
                 });
             });
