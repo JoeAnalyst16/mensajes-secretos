@@ -137,7 +137,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // Importamos `deleteDoc` para eliminar documentos
         import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ✅ Tu configuración real
@@ -221,7 +220,6 @@
             if (!recipientId || !text || !currentUserId) { showToast("Completa los campos.", true); return; }
             if (recipientId === currentUserId) { showToast("No puedes comunicarte contigo mismo.", true); return; }
             try {
-                // Añadimos el ID del documento para poder borrarlo más tarde
                 const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/messages`), {
                     senderId: currentUserId,
                     recipientId: recipientId,
@@ -252,14 +250,12 @@
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const messageData = change.doc.data();
-                        // Pasamos el ID del documento para poder borrarlo
                         displayMessage(messageData, change.doc.id);
                     }
                 });
             });
         }
         
-        // Función para borrar el mensaje de Firebase
         async function deleteMessage(docId) {
             try {
                 await deleteDoc(doc(db, `artifacts/${appId}/public/data/messages`, docId));
@@ -269,7 +265,6 @@
             }
         }
 
-        // Ahora `displayMessage` recibe el ID del documento
         function displayMessage(data, docId) {
             if (noMessagesElement) noMessagesElement.style.display = 'none';
 
@@ -286,32 +281,40 @@
             messagesContainer.appendChild(messageWrapper);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            // NUEVO: Temporizador para la autodestrucción visual y del servidor
-            const disappearTime = 10000; // 10 segundos
-            
-            // Desvanecimiento visual
+            const disappearTime = 10000;
             setTimeout(() => {
                 messageWrapper.classList.add('fading-out');
-                // Eliminamos el elemento del DOM después de que la animación termine
                 setTimeout(() => {
                     messageWrapper.remove();
-                }, 500); // 500ms es la duración de la transición CSS
-            }, disappearTime - 500); // Inicia el desvanecimiento 0.5s antes del tiempo final
+                }, 500);
+            }, disappearTime - 500);
 
-            // Eliminación del servidor
             setTimeout(() => {
                 deleteMessage(docId);
-            }, disappearTime + 1000); // Borra el documento 1 segundo después de que desaparece visualmente
+            }, disappearTime + 1000);
         }
 
-        // Escuchar por cambios en el campo de receptor
+        // NUEVO: Detección de captura de pantalla
+        // Esta función oculta los mensajes y los borra si se detecta una captura de pantalla.
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'PrintScreen' || (e.ctrlKey && e.key === 's') || (e.metaKey && e.shiftKey && e.key === '3') || (e.metaKey && e.shiftKey && e.key === '4')) {
+                const messages = messagesContainer.querySelectorAll('.message-bubble');
+                messages.forEach(message => {
+                    message.classList.add('fading-out');
+                    // Elimina el mensaje del DOM y de Firebase (si es posible, no hay docId aquí)
+                    setTimeout(() => { message.remove(); }, 500);
+                });
+                showToast("¡Alerta! Mensajes borrados por intento de captura.", true);
+                // Aquí deberías llamar a una función para borrar los mensajes de la DB si es necesario
+            }
+        });
+        
         recipientIdInput.addEventListener('keyup', () => {
             if (recipientIdInput.value.trim() === '') {
                 clearChatHistory();
             }
         });
 
-        // Escuchar clic en el botón de borrar
         clearRecipientBtn.addEventListener('click', () => {
             recipientIdInput.value = '';
             clearChatHistory();
