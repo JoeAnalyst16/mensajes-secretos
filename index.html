@@ -420,6 +420,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, addDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getDocs, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         setLogLevel('debug'); // Para ver logs de Firebase en la consola
 
@@ -435,6 +436,14 @@
         // Inicializar Firebase y autenticación
         function initializeFirebase() {
             try {
+                // Validación agregada: si la configuración está vacía, mostrar un error y no inicializar.
+                if (Object.keys(firebaseConfig).length === 0) {
+                    document.getElementById('status-message').textContent = "❌ Error: Faltan credenciales de Firebase. La app no puede conectarse.";
+                    document.getElementById('status-message').classList.remove('hidden');
+                    console.error("Firebase config is empty. Cannot initialize app.");
+                    return; // Detener la ejecución
+                }
+
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -473,7 +482,8 @@
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const messageData = change.doc.data();
-                        displayMessage(messageData.text, messageData.senderId);
+                        const docId = change.doc.id; // Obtener el ID del documento
+                        displayMessage(messageData.text, messageData.senderId, docId);
                     }
                 });
             }, (error) => {
@@ -600,7 +610,7 @@
             }
         }
 
-        function displayMessage(text, senderId) {
+        function displayMessage(text, senderId, docId) {
             const noMessages = document.getElementById('no-messages');
             const messagesContainer = document.getElementById('messagesContainer');
             
