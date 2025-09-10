@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shhhhh Es Un Secreto</title>
+    <title>Ghost Project</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -394,10 +394,10 @@
                 <div class="form-field">
                     <label for="messageText" class="form-label">Mensaje Encriptado</label>
                     <textarea id="messageText" rows="4" placeholder="Escribe tu mensaje... sin dejar rastro"
-                              class="form-input form-textarea"></textarea>
+                                 class="form-input form-textarea"></textarea>
                 </div>
                 
-                <button onclick="sendDemoMessage()" class="send-btn">
+                <button id="sendMessageBtn" class="send-btn">
                     Transmitir Mensaje
                 </button>
             </div>
@@ -416,229 +416,8 @@
         <p>¡Mensaje transmitido!</p>
     </div>
 
-    <script>
-        let messageCounter = 1;
-        let isStealthMode = false;
-
-        // Inicialización
-        function initialize() {
-            setTimeout(() => {
-                document.getElementById('loading-spinner').classList.add('hidden');
-                document.getElementById('userId').classList.remove('hidden');
-                setupEventListeners();
-                
-                // Mensaje de bienvenida
-                setTimeout(() => {
-                    displayDemoMessage("Sistema iniciado. Comunicación segura establecida.", "sistema-phantom");
-                }, 1500);
-            }, 2000);
-        }
-
-        function setupEventListeners() {
-            const userId = document.getElementById('userId');
-            const clearBtn = document.getElementById('clearRecipientBtn');
-            const recipientInput = document.getElementById('recipientId');
-
-            // Copiar ID al hacer clic
-            userId.onclick = () => {
-                navigator.clipboard.writeText(userId.textContent).then(() => {
-                    showToast("ID copiado discretamente", "success");
-                }).catch(() => {
-                    showToast("Error al copiar", "error");
-                });
-            };
-
-            // Botón limpiar
-            clearBtn.addEventListener('click', () => {
-                recipientInput.value = '';
-                clearChatHistory();
-                showToast("Campo limpiado", "success");
-            });
-
-            // Limpiar al borrar manualmente
-            recipientInput.addEventListener('input', () => {
-                if (recipientInput.value.trim() === '') {
-                    clearChatHistory();
-                }
-            });
-
-            // Detección de capturas de pantalla
-            setupScreenshotProtection();
-        }
-
-        function setupScreenshotProtection() {
-            // Detectar combinaciones de teclas para capturas
-            document.addEventListener('keydown', (e) => {
-                const isScreenshot = 
-                    e.key === 'PrintScreen' ||
-                    (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key)) ||
-                    (e.ctrlKey && e.shiftKey && e.key === 'S') ||
-                    (e.altKey && e.key === 'PrintScreen');
-
-                if (isScreenshot) {
-                    activateStealthMode();
-                }
-            });
-
-            // Detectar pérdida de foco (cambio de ventana)
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    activateStealthMode();
-                }
-            });
-        }
-
-        function activateStealthMode() {
-            if (isStealthMode) return;
-            
-            isStealthMode = true;
-            const messages = document.querySelectorAll('.message-bubble');
-            
-            messages.forEach(message => {
-                message.classList.add('fading');
-                setTimeout(() => message.remove(), 500);
-            });
-
-            showNoMessages();
-            showToast("Modo sigiloso activado", "error");
-            
-            setTimeout(() => {
-                isStealthMode = false;
-            }, 3000);
-        }
-
-        function showToast(message, type = "success") {
-            const toast = document.getElementById('toast-notification');
-            const toastText = toast.querySelector('p');
-            
-            toastText.textContent = message;
-            toast.className = `toast ${type}`;
-            toast.classList.remove('hidden');
-            
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3000);
-        }
-
-        function sendDemoMessage() {
-            const recipientId = document.getElementById('recipientId').value.trim();
-            const messageText = document.getElementById('messageText').value.trim();
-            
-            if (!recipientId || !messageText) {
-                showToast("Completa todos los campos", "error");
-                return;
-            }
-
-            if (recipientId === "demo-user-12345") {
-                showToast("No puedes enviarte mensajes", "error");
-                return;
-            }
-
-            showToast("Mensaje transmitido con éxito", "success");
-            document.getElementById('messageText').value = '';
-            
-            // Simular respuesta automática
-            setTimeout(() => {
-                const responses = [
-                    "Mensaje recibido y confirmado.",
-                    "Transmisión exitosa. Esperando instrucciones.",
-                    "Comunicación establecida. Todo despejado.",
-                    "Señal recibida. Operación en curso.",
-                    "Conexión segura. Mensaje procesado."
-                ];
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                displayDemoMessage(randomResponse, generateRandomId());
-            }, 2000 + Math.random() * 3000);
-        }
-
-        function generateRandomId() {
-            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-            let result = 'phantom-';
-            for (let i = 0; i < 8; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
-        function displayDemoMessage(text, senderId) {
-            const noMessages = document.getElementById('no-messages');
-            const messagesContainer = document.getElementById('messagesContainer');
-            
-            if (noMessages) noMessages.style.display = 'none';
-
-            const messageWrapper = document.createElement('div');
-            messageWrapper.className = 'message-bubble stealth-mode';
-            
-            const senderP = document.createElement('p');
-            senderP.className = 'message-sender';
-            senderP.textContent = `De: ${senderId}`;
-            
-            const textP = document.createElement('p');
-            textP.className = 'message-text';
-            textP.textContent = text;
-
-            messageWrapper.appendChild(senderP);
-            messageWrapper.appendChild(textP);
-            messagesContainer.appendChild(messageWrapper);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-            // Efecto visual al recibir mensaje
-            messagesContainer.classList.add('pulse-glow');
-            setTimeout(() => messagesContainer.classList.remove('pulse-glow'), 2000);
-
-            // Auto-destrucción en 12 segundos (demo)
-            setTimeout(() => {
-                messageWrapper.classList.add('fading');
-                setTimeout(() => {
-                    messageWrapper.remove();
-                    checkIfEmpty();
-                }, 500);
-            }, 12000);
-        }
-
-        function clearChatHistory() {
-            const messagesContainer = document.getElementById('messagesContainer');
-            const messages = messagesContainer.querySelectorAll('.message-bubble');
-            
-            messages.forEach(message => {
-                message.classList.add('fading');
-                setTimeout(() => message.remove(), 200);
-            });
-            
-            setTimeout(showNoMessages, 300);
-        }
-
-        function showNoMessages() {
-            const noMessages = document.getElementById('no-messages');
-            const messagesContainer = document.getElementById('messagesContainer');
-            
-            if (messagesContainer.querySelectorAll('.message-bubble').length === 0) {
-                noMessages.style.display = 'block';
-            }
-        }
-
-        function checkIfEmpty() {
-            const messagesContainer = document.getElementById('messagesContainer');
-            if (messagesContainer.querySelectorAll('.message-bubble').length === 0) {
-                showNoMessages();
-            }
-        }
-
-        // Inicializar cuando se carga la página
-        window.onload = initialize;
-        
-        // Protección adicional contra herramientas de desarrollo
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        
-        // Deshabilitar algunas teclas de desarrollo
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'F12' || 
-                (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) ||
-                (e.ctrlKey && e.key === 'U')) {
-                e.preventDefault();
-                activateStealthMode();
-            }
-        });
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="./app.js"></script>
 </body>
 </html>
