@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghost Project</title>
+    <title>Shhhhh Es Un Secreto</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -380,7 +380,7 @@
                     <label for="recipientId" class="form-label">Código del Receptor</label>
                     <div class="relative">
                         <input type="text" id="recipientId" placeholder="Ingresa el código..."
-                               class="form-input pr-10">
+                                class="form-input pr-10">
                         <button type="button" id="clearRecipientBtn" class="clear-btn" aria-label="Limpiar">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>
@@ -397,7 +397,7 @@
                                  class="form-input form-textarea"></textarea>
                 </div>
                 
-                <button id="sendMessageBtn" class="send-btn">
+                <button onclick="sendMessage()" class="send-btn">
                     Transmitir Mensaje
                 </button>
             </div>
@@ -416,11 +416,269 @@
         <p>¡Mensaje transmitido!</p>
     </div>
 
-    <!-- Firebase SDK - Versión Modular (Corregida) -->
-    <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
-    
-    <!-- Tu archivo JS principal -->
-    <script type="module" src="./app.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        setLogLevel('debug'); // Para ver logs de Firebase en la consola
+
+        let db, auth;
+        let userId = null;
+        let isStealthMode = false;
+
+        // Variables globales para la conexión de Firebase
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // Inicializar Firebase y autenticación
+        function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('userId').textContent = userId;
+                        document.getElementById('loading-spinner').classList.add('hidden');
+                        document.getElementById('userId').classList.remove('hidden');
+                        setupEventListeners();
+                        setupRealtimeListener();
+                        showToast("Conectado. Tu ID está listo.", "success");
+                    } else {
+                        // Si no hay usuario, intenta iniciar sesión
+                        if (initialAuthToken) {
+                             await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                document.getElementById('status-message').textContent = "❌ Error: No se pudo conectar a Firebase.";
+                document.getElementById('status-message').classList.remove('hidden');
+            }
+        }
+
+        // Configurar el oyente de mensajes en tiempo real
+        function setupRealtimeListener() {
+            const messagesRef = collection(db, `artifacts/${appId}/users/${userId}/inbox`);
+            const q = query(messagesRef);
+
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const messageData = change.doc.data();
+                        displayMessage(messageData.text, messageData.senderId);
+                    }
+                });
+            }, (error) => {
+                console.error("Error al escuchar los mensajes:", error);
+                showToast("Error de conexión. Revisa tu consola.", "error");
+            });
+        }
+
+        function setupEventListeners() {
+            const userIdEl = document.getElementById('userId');
+            const clearBtn = document.getElementById('clearRecipientBtn');
+            const recipientInput = document.getElementById('recipientId');
+
+            // Copiar ID al hacer clic
+            userIdEl.onclick = () => {
+                navigator.clipboard.writeText(userIdEl.textContent).then(() => {
+                    showToast("ID copiado discretamente", "success");
+                }).catch(() => {
+                    showToast("Error al copiar", "error");
+                });
+            };
+
+            // Botón limpiar
+            clearBtn.addEventListener('click', () => {
+                recipientInput.value = '';
+                clearChatHistory();
+                showToast("Campo limpiado", "success");
+            });
+
+            // Limpiar al borrar manualmente
+            recipientInput.addEventListener('input', () => {
+                if (recipientInput.value.trim() === '') {
+                    clearChatHistory();
+                }
+            });
+
+            // Detección de capturas de pantalla
+            setupScreenshotProtection();
+        }
+
+        function setupScreenshotProtection() {
+            // Detectar combinaciones de teclas para capturas
+            document.addEventListener('keydown', (e) => {
+                const isScreenshot = 
+                    e.key === 'PrintScreen' ||
+                    (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key)) ||
+                    (e.ctrlKey && e.shiftKey && e.key === 'S') ||
+                    (e.altKey && e.key === 'PrintScreen');
+
+                if (isScreenshot) {
+                    activateStealthMode();
+                }
+            });
+
+            // Detectar pérdida de foco (cambio de ventana)
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    activateStealthMode();
+                }
+            });
+        }
+
+        function activateStealthMode() {
+            if (isStealthMode) return;
+            
+            isStealthMode = true;
+            const messages = document.querySelectorAll('.message-bubble');
+            
+            messages.forEach(message => {
+                message.classList.add('fading');
+                setTimeout(() => message.remove(), 500);
+            });
+
+            showNoMessages();
+            showToast("Modo sigiloso activado", "error");
+            
+            setTimeout(() => {
+                isStealthMode = false;
+            }, 3000);
+        }
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast-notification');
+            const toastText = toast.querySelector('p');
+            
+            toastText.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Función para enviar el mensaje a Firebase
+        async function sendMessage() {
+            const recipientId = document.getElementById('recipientId').value.trim();
+            const messageText = document.getElementById('messageText').value.trim();
+            
+            if (!recipientId || !messageText) {
+                showToast("Completa todos los campos", "error");
+                return;
+            }
+
+            if (recipientId === userId) {
+                showToast("No puedes enviarte mensajes a ti mismo", "error");
+                return;
+            }
+
+            try {
+                const recipientInboxRef = collection(db, `artifacts/${appId}/users/${recipientId}/inbox`);
+                await addDoc(recipientInboxRef, {
+                    senderId: userId,
+                    text: messageText,
+                    timestamp: serverTimestamp()
+                });
+
+                showToast("Mensaje transmitido con éxito", "success");
+                document.getElementById('messageText').value = '';
+                
+            } catch (error) {
+                console.error("Error al transmitir el mensaje:", error);
+                showToast("Error de transmisión. Intenta de nuevo.", "error");
+            }
+        }
+
+        function displayMessage(text, senderId) {
+            const noMessages = document.getElementById('no-messages');
+            const messagesContainer = document.getElementById('messagesContainer');
+            
+            if (noMessages) noMessages.style.display = 'none';
+
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = 'message-bubble stealth-mode';
+            
+            const senderP = document.createElement('p');
+            senderP.className = 'message-sender';
+            senderP.textContent = `De: ${senderId}`;
+            
+            const textP = document.createElement('p');
+            textP.className = 'message-text';
+            textP.textContent = text;
+
+            messageWrapper.appendChild(senderP);
+            messageWrapper.appendChild(textP);
+            messagesContainer.appendChild(messageWrapper);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Efecto visual al recibir mensaje
+            messagesContainer.classList.add('pulse-glow');
+            setTimeout(() => messagesContainer.classList.remove('pulse-glow'), 2000);
+
+            // Auto-destrucción en 5 minutos (300000 ms)
+            setTimeout(() => {
+                messageWrapper.classList.add('fading');
+                setTimeout(() => {
+                    messageWrapper.remove();
+                    checkIfEmpty();
+                }, 500);
+            }, 300000);
+        }
+
+        function clearChatHistory() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messages = messagesContainer.querySelectorAll('.message-bubble');
+            
+            messages.forEach(message => {
+                message.classList.add('fading');
+                setTimeout(() => message.remove(), 200);
+            });
+            
+            setTimeout(showNoMessages, 300);
+        }
+
+        function showNoMessages() {
+            const noMessages = document.getElementById('no-messages');
+            const messagesContainer = document.getElementById('messagesContainer');
+            
+            if (messagesContainer.querySelectorAll('.message-bubble').length === 0) {
+                noMessages.style.display = 'block';
+            }
+        }
+
+        function checkIfEmpty() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            if (messagesContainer.querySelectorAll('.message-bubble').length === 0) {
+                showNoMessages();
+            }
+        }
+
+        // Inicializar cuando se carga la página
+        window.onload = initializeFirebase;
+        
+        // Protección adicional contra herramientas de desarrollo
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Deshabilitar algunas teclas de desarrollo
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) ||
+                (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+                activateStealthMode();
+            }
+        });
+    </script>
 </body>
 </html>
