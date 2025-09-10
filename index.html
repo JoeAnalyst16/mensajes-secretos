@@ -7,354 +7,638 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body {
-            /* Fondo con patrón de cuadrícula para un look de ciencia ficción más misterioso */
-            background-color: #040710; /* Azul muy oscuro */
-            background-image: radial-gradient(#101625 1px, transparent 1px); /* Cuadrícula azul oscuro */
-            background-size: 20px 20px;
-            font-family: 'Roboto Mono', monospace;
-            color: #b0c2e2; /* Tono de azul claro para texto general */
+            background: linear-gradient(135deg, #0a0f1c 0%, #1a1f2e 100%);
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
+            color: #d4d8e0;
+            overflow-x: hidden;
         }
-        .container-panel {
-            background-color: rgba(10, 15, 25, 0.95); /* Azul oscuro casi negro con ligera transparencia */
-            border: 2px solid #3a7bd5; /* Azul eléctrico para el borde principal */
-            box-shadow: 0 0 30px rgba(58, 123, 213, 0.5), inset 0 0 10px rgba(58, 123, 213, 0.2); /* Sombra exterior e interior para efecto futurista */
-            backdrop-filter: blur(7px); /* Más blur para un efecto más etéreo */
-            border-radius: 15px; /* Bordes ligeramente más redondeados */
+        
+        .main-container {
+            background: rgba(15, 22, 36, 0.85);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 
+                        0 0 0 1px rgba(148, 163, 184, 0.05);
+            backdrop-filter: blur(16px) saturate(180%);
+            border-radius: 24px;
+            position: relative;
+            overflow: hidden;
         }
-        .text-neon {
-            color: #00e5ff; /* Cian brillante para neón */
-            text-shadow: 0 0 8px #00e5ff, 0 0 15px #00e5ff, 0 0 25px rgba(0, 229, 255, 0.7); /* Brillo más intenso */
-            font-family: 'Orbitron', sans-serif;
+        
+        .main-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.3), transparent);
         }
-        .input-glow:focus {
-            box-shadow: 0 0 10px #00e5ff, 0 0 20px rgba(0, 229, 255, 0.5); /* Brillo más fuerte al enfocar */
-            border-color: #00e5ff;
+        
+        .title-glow {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 2rem;
+            letter-spacing: -0.025em;
+            text-shadow: 0 0 20px rgba(241, 245, 249, 0.1);
         }
-        .btn-send {
-            background-color: #007bff; /* Azul vibrante para el botón */
-            transition: all 0.3s ease;
-            box-shadow: 0 0 15px rgba(0, 123, 255, 0.6); /* Sombra del botón */
-            border: 1px solid #00e5ff; /* Borde sutil */
+        
+        .subtitle {
+            color: #64748b;
+            font-weight: 400;
+            font-size: 0.875rem;
+            letter-spacing: 0.025em;
         }
-        .btn-send:hover {
-            background-color: #0056b3; /* Tono más oscuro al pasar el ratón */
-            transform: translateY(-3px) scale(1.02); /* Efecto de "levantamiento" y ligero escalado */
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.8), 0 0 30px rgba(0, 123, 255, 0.7);
+        
+        .id-container {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .message-bubble {
-            background-color: rgba(18, 28, 45, 0.9); /* Azul oscuro para burbujas de mensaje */
-            border-left: 3px solid #00e5ff; /* Borde neón para mensajes recibidos */
-            animation: slideInLeft 0.5s ease-out;
-            border-radius: 8px; /* Bordes ligeramente redondeados */
+        
+        .id-container:hover {
+            background: rgba(30, 41, 59, 0.6);
+            border-color: rgba(100, 116, 139, 0.4);
+            transform: translateY(-1px);
         }
-        .toast {
-            animation: fadeIn 0.5s, fadeOut 0.5s 2.5s forwards;
-            background-color: #00e5ff; /* Color de neón para el toast */
-            color: #040710; /* Texto oscuro en toast neón */
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.7);
+        
+        .id-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            color: #e2e8f0;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: color 0.2s ease;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-        @keyframes slideInLeft {
-            from { transform: translateX(-30px); opacity: 0; } /* Animación más pronunciada */
-            to { transform: translateX(0); opacity: 1; }
+        
+        .id-code:hover {
+            color: #cbd5e1;
         }
-        .relative-input-container {
+        
+        .form-field {
             position: relative;
         }
-        .clear-recipient-btn {
+        
+        .form-label {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .form-input {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            color: #f1f5f9;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(4px);
+        }
+        
+        .form-input::placeholder {
+            color: #64748b;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(100, 116, 139, 0.6);
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .clear-btn {
             position: absolute;
-            right: 12px; /* Ajustado para mejor separación */
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
             cursor: pointer;
-            color: #b0c2e2; /* Color de texto general */
-            font-size: 1.3rem; /* Ligeramente más grande */
-            line-height: 1;
-            transition: color 0.3s ease;
+            color: #64748b;
+            transition: all 0.2s ease;
+            padding: 4px;
+            border-radius: 6px;
         }
-        .clear-recipient-btn:hover {
-            color: #00e5ff; /* Color neón al pasar el ratón */
+        
+        .clear-btn:hover {
+            color: #94a3b8;
+            background: rgba(71, 85, 105, 0.3);
         }
-        .fading-out {
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Transición también para el transform */
+        
+        .send-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            color: #f1f5f9;
+            font-weight: 500;
+            padding: 1rem;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .send-btn:hover {
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .send-btn:active {
+            transform: translateY(0);
+        }
+        
+        .messages-section {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid rgba(71, 85, 105, 0.2);
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
+        }
+        
+        .section-title {
+            color: #e2e8f0;
+            font-weight: 600;
+            font-size: 1.125rem;
+            letter-spacing: -0.025em;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+            margin-bottom: 1rem;
+        }
+        
+        .messages-container {
+            max-height: 300px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(71, 85, 105, 0.5) transparent;
+        }
+        
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.5);
+            border-radius: 3px;
+        }
+        
+        .message-bubble {
+            background: rgba(51, 65, 85, 0.4);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            animation: slideInMessage 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .message-bubble::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, #64748b, #475569);
+        }
+        
+        .message-sender {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            opacity: 0.8;
+        }
+        
+        .message-text {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .message-bubble.fading {
             opacity: 0;
-            transform: scale(0.9); /* Se encoge un poco al desaparecer */
+            transform: scale(0.95) translateY(-10px);
+            filter: blur(1px);
         }
-        #status-message {
-            background-color: #ffc107; /* Amarillo para el estado de conexión */
-            color: #1a202c; /* Texto oscuro */
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+        
+        .no-messages {
+            color: #64748b;
+            text-align: center;
+            padding: 2rem 1rem;
+            font-style: italic;
         }
-        #status-message.hidden {
-            display: none;
+        
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.875rem 1.25rem;
+            border-radius: 12px;
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            font-weight: 500;
+            font-size: 0.875rem;
+            z-index: 1000;
+            animation: slideInToast 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .bg-gray-900\/50 { /* Para los paneles internos como el del ID y el buzón */
-            background-color: rgba(18, 28, 45, 0.7); /* Azul oscuro semitransparente */
-            border: 1px solid #3a7bd5; /* Borde sutil */
+        
+        .toast.success {
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+            border-color: rgba(34, 197, 94, 0.3);
         }
-        .placeholder-gray-500::placeholder { /* Color del placeholder para inputs */
-            color: #7f97b5;
+        
+        .toast.error {
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        
+        .status-banner {
+            background: rgba(251, 191, 36, 0.9);
+            color: #1f2937;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(100, 116, 139, 0.3);
+            border-top: 2px solid #64748b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes slideInMessage {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInToast {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 0 rgba(100, 116, 139, 0);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(100, 116, 139, 0.2);
+            }
+        }
+        
+        /* Efectos de seguridad y privacidad */
+        .stealth-mode {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 1rem;
+                border-radius: 20px;
+            }
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-md mx-auto rounded-xl p-6 md:p-8 space-y-6 container-panel">
-        <div id="status-message" class="text-black p-3 rounded-lg text-center text-sm font-bold bg-yellow-500">
-            ⏳ Conectando con el Servidor...
-        </div>
-        
-        <div class="text-center">
-            <h1 class="text-4xl font-bold text-neon">GHOST PROJECT</h1>
-            <p class="text-gray-400 mt-2 text-sm">Mensajes diseñados para desvanecerse.</p>
-        </div>
-
-        <div class="bg-gray-900/50 p-4 rounded-lg text-center border border-gray-700">
-            <p class="text-xs text-gray-500 mb-2">Tu Identificador de Enlace:</p>
-            <div id="loading-spinner" class="flex justify-center items-center">
-                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neon"></div>
+    <div class="w-full max-w-md mx-auto main-container">
+        <div class="p-8 space-y-8">
+            
+            <div id="status-message" class="status-banner hidden">
+                ⏳ Conectando con el Servidor...
             </div>
-            <p id="userId" class="font-mono text-xl text-neon break-all select-all cursor-pointer hidden"></p>
-        </div>
+            
+            <div class="text-center space-y-2">
+                <h1 class="title-glow">GHOST PROJECT</h1>
+                <p class="subtitle">Mensajes diseñados para desvanecerse</p>
+            </div>
 
-        <form id="sendMessageForm" class="space-y-4">
-            <div class="relative-input-container">
-                <label for="recipientId" class="block text-sm font-medium text-gray-400 mb-2">Código del Receptor</label>
-                <input type="text" id="recipientId" required placeholder="Ingresa el código del receptor..."
-                        class="w-full bg-gray-800 rounded-md px-3 pr-8 py-2 text-white placeholder-gray-500 border border-gray-700 input-glow">
-                <button type="button" id="clearRecipientBtn" class="clear-recipient-btn" aria-label="Limpiar código del receptor">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+            <div class="id-container p-4 text-center">
+                <p class="text-xs text-slate-500 mb-2 uppercase tracking-wider">Tu Identificador</p>
+                <div id="loading-spinner" class="flex justify-center items-center py-2">
+                    <div class="spinner"></div>
+                </div>
+                <p id="userId" class="id-code text-lg hidden select-all">demo-user-12345</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="form-field">
+                    <label for="recipientId" class="form-label">Código del Receptor</label>
+                    <div class="relative">
+                        <input type="text" id="recipientId" placeholder="Ingresa el código..."
+                               class="form-input pr-10">
+                        <button type="button" id="clearRecipientBtn" class="clear-btn" aria-label="Limpiar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="m15 9-6 6"/>
+                                <path d="m9 9 6 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-field">
+                    <label for="messageText" class="form-label">Mensaje Encriptado</label>
+                    <textarea id="messageText" rows="4" placeholder="Escribe tu mensaje... sin dejar rastro"
+                              class="form-input form-textarea"></textarea>
+                </div>
+                
+                <button onclick="sendDemoMessage()" class="send-btn">
+                    Transmitir Mensaje
                 </button>
             </div>
-            <div>
-                <label for="messageText" class="block text-sm font-medium text-gray-400 mb-2">Mensaje encriptado</label>
-                <textarea id="messageText" required rows="4" placeholder="Escribe tu mensaje... no dejes rastro."
-                          class="w-full bg-gray-800 rounded-md px-3 py-2 text-white placeholder-gray-500 border border-gray-700 input-glow"></textarea>
-            </div>
-            <button type="submit"
-                    class="w-full btn-send text-white font-bold py-3 px-4 rounded-lg shadow-xl hover:scale-105">
-                Transmitir Mensaje
-            </button>
-        </form>
 
-        <div>
-            <h2 class="text-xl font-semibold mb-4 border-b-2 border-gray-700 pb-2 text-neon">Buzón Fantasma</h2>
-            <div id="messagesContainer" class="space-y-4 h-48 overflow-y-auto p-2 bg-gray-900/50 rounded-lg border border-gray-700">
-                <p id="no-messages" class="text-gray-600 text-center py-4">Esperando transmisiones...</p>
+            <div class="messages-section p-4">
+                <h2 class="section-title">Buzón Fantasma</h2>
+                <div id="messagesContainer" class="messages-container">
+                    <p id="no-messages" class="no-messages">Esperando transmisiones...</p>
+                </div>
             </div>
+            
         </div>
     </div>
-    
-    <div id="toast-notification" class="toast fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg hidden">
+
+    <div id="toast-notification" class="toast hidden">
         <p>¡Mensaje transmitido!</p>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        let messageCounter = 1;
+        let isStealthMode = false;
 
-        // ✅ Tu configuración real
-        const firebaseConfig = {
-            apiKey: "AIzaSyAqsD-wMWesTqfvh0TK_5a5IZw0JJldS34",
-            authDomain: "mensajes-297b5.firebaseapp.com",
-            projectId: "mensajes-297b5",
-            storageBucket: "mensajes-297b5.firebasestorage.app",
-            messagingSenderId: "557469481203",
-            appId: "1:557469481203:web:c6eeb657bd5e3aaf6adf86",
-            measurementId: "G-J8Z4SX2KHB"
-        };
-
-        // Variables globales
-        const appId = "mensajes-297b5";
-        let app, auth, db, currentUserId;
-        const userIdElement = document.getElementById('userId');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const sendMessageForm = document.getElementById('sendMessageForm');
-        const recipientIdInput = document.getElementById('recipientId');
-        const messageTextInput = document.getElementById('messageText');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const noMessagesElement = document.getElementById('no-messages');
-        const toastNotification = document.getElementById('toast-notification');
-        const statusMessage = document.getElementById('status-message');
-        const clearRecipientBtn = document.getElementById('clearRecipientBtn');
-
-        async function initialize() {
-            try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                statusMessage.textContent = 'Conectando con el Servidor...';
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        currentUserId = user.uid;
-                        displayUserId();
-                        listenForMessages();
-                        statusMessage.classList.add('hidden');
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                });
-            } catch (error) {
-                console.error("Error al inicializar:", error);
-                userIdElement.textContent = "Error de enlace.";
-                userIdElement.classList.remove('hidden');
-                loadingSpinner.classList.add('hidden');
-                statusMessage.textContent = '❌ Fallo en la conexión. Revisa las reglas de seguridad.';
-                statusMessage.style.backgroundColor = 'rgba(220, 38, 38, 0.8)';
-            }
+        // Inicialización
+        function initialize() {
+            setTimeout(() => {
+                document.getElementById('loading-spinner').classList.add('hidden');
+                document.getElementById('userId').classList.remove('hidden');
+                setupEventListeners();
+                
+                // Mensaje de bienvenida
+                setTimeout(() => {
+                    displayDemoMessage("Sistema iniciado. Comunicación segura establecida.", "sistema-phantom");
+                }, 1500);
+            }, 2000);
         }
 
-        function displayUserId() {
-            userIdElement.textContent = currentUserId;
-            loadingSpinner.classList.add('hidden');
-            userIdElement.classList.remove('hidden');
-            userIdElement.onclick = () => {
-                navigator.clipboard.writeText(currentUserId).then(() => {
-                    showToast('ID copiado al portapapeles.');
-                }).catch(err => {
-                    showToast('Error al copiar el ID.', true);
+        function setupEventListeners() {
+            const userId = document.getElementById('userId');
+            const clearBtn = document.getElementById('clearRecipientBtn');
+            const recipientInput = document.getElementById('recipientId');
+
+            // Copiar ID al hacer clic
+            userId.onclick = () => {
+                navigator.clipboard.writeText(userId.textContent).then(() => {
+                    showToast("ID copiado discretamente", "success");
+                }).catch(() => {
+                    showToast("Error al copiar", "error");
                 });
             };
-        }
-        
-        function showToast(message, isError = false) {
-            const toastP = toastNotification.querySelector('p');
-            toastP.textContent = message;
-            toastNotification.className = `toast fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg ${isError ? 'bg-red-700' : 'bg-green-700'}`;
-            if (isError) { // Ajuste para el color de error en el nuevo esquema
-                toastNotification.style.backgroundColor = '#dc3545';
-                toastNotification.style.boxShadow = '0 0 15px rgba(220, 53, 69, 0.7)';
-                toastNotification.style.color = 'white';
-            } else { // Ajuste para el color de éxito
-                toastNotification.style.backgroundColor = '#00e5ff';
-                toastNotification.style.boxShadow = '0 0 15px rgba(0, 229, 255, 0.7)';
-                toastNotification.style.color = '#040710';
-            }
-            toastNotification.classList.remove('hidden');
-            setTimeout(() => { toastNotification.classList.add('hidden'); }, 3000);
+
+            // Botón limpiar
+            clearBtn.addEventListener('click', () => {
+                recipientInput.value = '';
+                clearChatHistory();
+                showToast("Campo limpiado", "success");
+            });
+
+            // Limpiar al borrar manualmente
+            recipientInput.addEventListener('input', () => {
+                if (recipientInput.value.trim() === '') {
+                    clearChatHistory();
+                }
+            });
+
+            // Detección de capturas de pantalla
+            setupScreenshotProtection();
         }
 
-        async function handleSendMessage(e) {
-            e.preventDefault();
-            const recipientId = recipientIdInput.value.trim();
-            const text = messageTextInput.value.trim();
-            if (!recipientId || !text || !currentUserId) { showToast("Completa los campos.", true); return; }
-            if (recipientId === currentUserId) { showToast("No puedes comunicarte contigo mismo.", true); return; }
-            try {
-                const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/messages`), {
-                    senderId: currentUserId,
-                    recipientId: recipientId,
-                    text: text,
-                    timestamp: new Date(),
-                });
-                showToast("¡Mensaje transmitido con éxito!");
-                messageTextInput.value = ''; // Solo borra el campo de mensaje
-            } catch (error) {
-                console.error("Error en la transmisión:", error);
-                showToast("Fallo en la transmisión.", true);
-            }
-        }
-        
-        function clearChatHistory() {
-            messagesContainer.innerHTML = '';
-            messagesContainer.appendChild(noMessagesElement);
-            noMessagesElement.style.display = 'block';
-        }
+        function setupScreenshotProtection() {
+            // Detectar combinaciones de teclas para capturas
+            document.addEventListener('keydown', (e) => {
+                const isScreenshot = 
+                    e.key === 'PrintScreen' ||
+                    (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key)) ||
+                    (e.ctrlKey && e.shiftKey && e.key === 'S') ||
+                    (e.altKey && e.key === 'PrintScreen');
 
-        function listenForMessages() {
-            if (!currentUserId) return;
-            const q = query(
-                collection(db, `artifacts/${appId}/public/data/messages`),
-                where("recipientId", "==", currentUserId)
-            );
-            onSnapshot(q, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
-                        const messageData = change.doc.data();
-                        displayMessage(messageData, change.doc.id);
-                    }
-                });
+                if (isScreenshot) {
+                    activateStealthMode();
+                }
+            });
+
+            // Detectar pérdida de foco (cambio de ventana)
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    activateStealthMode();
+                }
             });
         }
-        
-        async function deleteMessage(docId) {
-            try {
-                await deleteDoc(doc(db, `artifacts/${appId}/public/data/messages`, docId));
-                console.log("Mensaje borrado de Firestore:", docId);
-            } catch (error) {
-                console.error("Error al borrar el mensaje:", error);
-            }
+
+        function activateStealthMode() {
+            if (isStealthMode) return;
+            
+            isStealthMode = true;
+            const messages = document.querySelectorAll('.message-bubble');
+            
+            messages.forEach(message => {
+                message.classList.add('fading');
+                setTimeout(() => message.remove(), 500);
+            });
+
+            showNoMessages();
+            showToast("Modo sigiloso activado", "error");
+            
+            setTimeout(() => {
+                isStealthMode = false;
+            }, 3000);
         }
 
-        function displayMessage(data, docId) {
-            if (noMessagesElement) noMessagesElement.style.display = 'none';
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast-notification');
+            const toastText = toast.querySelector('p');
+            
+            toastText.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function sendDemoMessage() {
+            const recipientId = document.getElementById('recipientId').value.trim();
+            const messageText = document.getElementById('messageText').value.trim();
+            
+            if (!recipientId || !messageText) {
+                showToast("Completa todos los campos", "error");
+                return;
+            }
+
+            if (recipientId === "demo-user-12345") {
+                showToast("No puedes enviarte mensajes", "error");
+                return;
+            }
+
+            showToast("Mensaje transmitido con éxito", "success");
+            document.getElementById('messageText').value = '';
+            
+            // Simular respuesta automática
+            setTimeout(() => {
+                const responses = [
+                    "Mensaje recibido y confirmado.",
+                    "Transmisión exitosa. Esperando instrucciones.",
+                    "Comunicación establecida. Todo despejado.",
+                    "Señal recibida. Operación en curso.",
+                    "Conexión segura. Mensaje procesado."
+                ];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                displayDemoMessage(randomResponse, generateRandomId());
+            }, 2000 + Math.random() * 3000);
+        }
+
+        function generateRandomId() {
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let result = 'phantom-';
+            for (let i = 0; i < 8; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function displayDemoMessage(text, senderId) {
+            const noMessages = document.getElementById('no-messages');
+            const messagesContainer = document.getElementById('messagesContainer');
+            
+            if (noMessages) noMessages.style.display = 'none';
 
             const messageWrapper = document.createElement('div');
-            messageWrapper.className = 'message-bubble p-4 rounded-lg shadow-md';
+            messageWrapper.className = 'message-bubble stealth-mode';
+            
             const senderP = document.createElement('p');
-            senderP.className = 'text-xs text-neon font-bold mb-2 truncate';
-            senderP.textContent = `De: ${data.senderId}`;
+            senderP.className = 'message-sender';
+            senderP.textContent = `De: ${senderId}`;
+            
             const textP = document.createElement('p');
-            textP.className = 'text-gray-300 text-sm';
-            textP.textContent = data.text;
+            textP.className = 'message-text';
+            textP.textContent = text;
+
             messageWrapper.appendChild(senderP);
             messageWrapper.appendChild(textP);
             messagesContainer.appendChild(messageWrapper);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            const disappearTime = 180000;
+            // Efecto visual al recibir mensaje
+            messagesContainer.classList.add('pulse-glow');
+            setTimeout(() => messagesContainer.classList.remove('pulse-glow'), 2000);
+
+            // Auto-destrucción en 12 segundos (demo)
             setTimeout(() => {
-                messageWrapper.classList.add('fading-out');
+                messageWrapper.classList.add('fading');
                 setTimeout(() => {
                     messageWrapper.remove();
+                    checkIfEmpty();
                 }, 500);
-            }, disappearTime - 500);
-
-            setTimeout(() => {
-                deleteMessage(docId);
-            }, disappearTime + 1000);
+            }, 12000);
         }
 
-        window.addEventListener('keyup', (e) => {
-            const isPrintScreen = e.key === 'PrintScreen' || (e.key === 'p' && e.ctrlKey);
-            const isCmdShift3 = e.metaKey && e.shiftKey && e.key === '3';
-            const isCmdShift4 = e.metaKey && e.shiftKey && e.key === '4';
-            const isWindowsSnippingTool = e.metaKey && e.shiftKey && e.key === 's';
+        function clearChatHistory() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messages = messagesContainer.querySelectorAll('.message-bubble');
+            
+            messages.forEach(message => {
+                message.classList.add('fading');
+                setTimeout(() => message.remove(), 200);
+            });
+            
+            setTimeout(showNoMessages, 300);
+        }
 
-            if (isPrintScreen || isCmdShift3 || isCmdShift4 || isWindowsSnippingTool) {
-                const messages = messagesContainer.querySelectorAll('.message-bubble');
-                messages.forEach(message => {
-                    message.classList.add('fading-out');
-                    setTimeout(() => { message.remove(); }, 500);
-                });
-                showToast("¡Alerta! Mensajes borrados por intento de captura.", true);
+        function showNoMessages() {
+            const noMessages = document.getElementById('no-messages');
+            const messagesContainer = document.getElementById('messagesContainer');
+            
+            if (messagesContainer.querySelectorAll('.message-bubble').length === 0) {
+                noMessages.style.display = 'block';
             }
-        });
-        
-        recipientIdInput.addEventListener('keyup', () => {
-            if (recipientIdInput.value.trim() === '') {
-                clearChatHistory();
+        }
+
+        function checkIfEmpty() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            if (messagesContainer.querySelectorAll('.message-bubble').length === 0) {
+                showNoMessages();
             }
-        });
+        }
 
-        clearRecipientBtn.addEventListener('click', () => {
-            recipientIdInput.value = '';
-            clearChatHistory();
-        });
-
-        sendMessageForm.addEventListener('submit', handleSendMessage);
+        // Inicializar cuando se carga la página
         window.onload = initialize;
+        
+        // Protección adicional contra herramientas de desarrollo
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Deshabilitar algunas teclas de desarrollo
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) ||
+                (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+                activateStealthMode();
+            }
+        });
     </script>
 </body>
 </html>
-
