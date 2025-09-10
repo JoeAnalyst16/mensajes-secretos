@@ -358,7 +358,7 @@
     <div class="w-full max-w-md mx-auto main-container">
         <div class="p-8 space-y-8">
             
-            <div id="status-message" class="status-banner hidden">
+            <div id="status-message" class="status-banner">
                 ⏳ Conectando con el Servidor...
             </div>
             
@@ -418,22 +418,17 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, addDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getDocs, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { crypto } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-util.js";
         
-        setLogLevel('debug'); // Para ver logs de Firebase en la consola
+        setLogLevel('debug');
 
         let db, auth;
         let userId = null;
         let isStealthMode = false;
 
-        // Variables globales para la conexión de Firebase
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
-        // Credenciales de Firebase proporcionadas por el usuario
         const firebaseConfig = {
             apiKey: "AIzaSyAqsD-wMWesTqfvh0TK_5a5IZw0JJldS34",
             authDomain: "mensajes-297b5.firebaseapp.com",
@@ -444,39 +439,48 @@
             measurementId: "G-J8Z4SX2KHB"
         };
         
-        // Inicializar Firebase y autenticación
-        function initializeFirebase() {
+        async function initializeFirebase() {
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                onAuthStateChanged(auth, async (user) => {
+                document.getElementById('status-message').textContent = '⏳ Conectando...';
+                document.getElementById('status-message').classList.remove('hidden');
+
+                // Autenticación anónima para obtener un UID
+                await signInAnonymously(auth);
+
+                onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
+                        console.log('Autenticación exitosa. User ID:', userId);
                         document.getElementById('userId').textContent = userId;
                         document.getElementById('loading-spinner').classList.add('hidden');
                         document.getElementById('userId').classList.remove('hidden');
+                        document.getElementById('status-message').classList.add('hidden');
                         setupEventListeners();
                         setupRealtimeListener();
                         showToast("Conectado. Tu ID está listo.", "success");
                     } else {
-                        // Si no hay usuario, intenta iniciar sesión
-                        if (initialAuthToken) {
-                             await signInWithCustomToken(auth, initialAuthToken);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
+                        console.error("Autenticación fallida o usuario desconectado.");
+                        document.getElementById('userId').textContent = 'Error de conexión';
+                        document.getElementById('loading-spinner').classList.add('hidden');
+                        document.getElementById('userId').classList.remove('hidden');
+                        document.getElementById('status-message').textContent = "❌ Error de conexión. Revisa la consola.";
                     }
                 });
+
             } catch (error) {
                 console.error("Error al inicializar Firebase:", error);
                 document.getElementById('status-message').textContent = "❌ Error: No se pudo conectar a Firebase.";
                 document.getElementById('status-message').classList.remove('hidden');
+                document.getElementById('loading-spinner').classList.add('hidden');
+                document.getElementById('userId').textContent = 'Error de conexión';
+                document.getElementById('userId').classList.remove('hidden');
             }
         }
 
-        // Configurar el oyente de mensajes en tiempo real
         function setupRealtimeListener() {
             const messagesRef = collection(db, `artifacts/${appId}/users/${userId}/inbox`);
             const q = query(messagesRef);
@@ -485,7 +489,7 @@
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const messageData = change.doc.data();
-                        const docId = change.doc.id; // Obtener el ID del documento
+                        const docId = change.doc.id;
                         displayMessage(messageData.text, messageData.senderId, docId);
                     }
                 });
@@ -500,7 +504,6 @@
             const clearBtn = document.getElementById('clearRecipientBtn');
             const recipientInput = document.getElementById('recipientId');
 
-            // Copiar ID al hacer clic
             userIdEl.onclick = () => {
                 navigator.clipboard.writeText(userIdEl.textContent).then(() => {
                     showToast("ID copiado discretamente", "success");
@@ -509,26 +512,22 @@
                 });
             };
 
-            // Botón limpiar
             clearBtn.addEventListener('click', () => {
                 recipientInput.value = '';
                 clearChatHistory();
                 showToast("Campo limpiado", "success");
             });
 
-            // Limpiar al borrar manualmente
             recipientInput.addEventListener('input', () => {
                 if (recipientInput.value.trim() === '') {
                     clearChatHistory();
                 }
             });
 
-            // Detección de capturas de pantalla
             setupScreenshotProtection();
         }
 
         function setupScreenshotProtection() {
-            // Detectar combinaciones de teclas para capturas
             document.addEventListener('keydown', (e) => {
                 const isScreenshot = 
                     e.key === 'PrintScreen' ||
@@ -541,7 +540,6 @@
                 }
             });
 
-            // Detectar pérdida de foco (cambio de ventana)
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) {
                     activateStealthMode();
@@ -581,7 +579,6 @@
             }, 3000);
         }
 
-        // Función para enviar el mensaje a Firebase
         async function sendMessage() {
             const recipientId = document.getElementById('recipientId').value.trim();
             const messageText = document.getElementById('messageText').value.trim();
@@ -635,11 +632,9 @@
             messagesContainer.appendChild(messageWrapper);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-            // Efecto visual al recibir mensaje
             messagesContainer.classList.add('pulse-glow');
             setTimeout(() => messagesContainer.classList.remove('pulse-glow'), 2000);
 
-            // Auto-destrucción en 5 minutos (300000 ms)
             setTimeout(() => {
                 messageWrapper.classList.add('fading');
                 setTimeout(() => {
@@ -677,13 +672,10 @@
             }
         }
 
-        // Inicializar cuando se carga la página
         window.onload = initializeFirebase;
         
-        // Protección adicional contra herramientas de desarrollo
         document.addEventListener('contextmenu', e => e.preventDefault());
         
-        // Deshabilitar algunas teclas de desarrollo
         document.addEventListener('keydown', (e) => {
             if (e.key === 'F12' || 
                 (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) ||
