@@ -421,7 +421,8 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, addDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getDocs, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+        import { crypto } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-util.js";
+        
         setLogLevel('debug'); // Para ver logs de Firebase en la consola
 
         let db, auth;
@@ -430,20 +431,22 @@
 
         // Variables globales para la conexión de Firebase
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // Credenciales de Firebase proporcionadas por el usuario
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqsD-wMWesTqfvh0TK_5a5IZw0JJldS34",
+            authDomain: "mensajes-297b5.firebaseapp.com",
+            projectId: "mensajes-297b5",
+            storageBucket: "mensajes-297b5.firebasestorage.app",
+            messagingSenderId: "557469481203",
+            appId: "1:557469481203:web:c6eeb657bd5e3aaf6adf86",
+            measurementId: "G-J8Z4SX2KHB"
+        };
         
         // Inicializar Firebase y autenticación
         function initializeFirebase() {
             try {
-                // Validación agregada: si la configuración está vacía, mostrar un error y no inicializar.
-                if (Object.keys(firebaseConfig).length === 0) {
-                    document.getElementById('status-message').textContent = "❌ Error: Faltan credenciales de Firebase. La app no puede conectarse.";
-                    document.getElementById('status-message').classList.remove('hidden');
-                    console.error("Firebase config is empty. Cannot initialize app.");
-                    return; // Detener la ejecución
-                }
-
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
