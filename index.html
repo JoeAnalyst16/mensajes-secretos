@@ -44,6 +44,10 @@
             transform: translateY(-2px) scale(1.01); /* Efecto de "levantamiento" sutil */
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Sombra al pasar el ratón para dar profundidad */
         }
+        .btn-send:active {
+            transform: translateY(1px) scale(1); /* Efecto de "presión" al hacer clic */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
         .message-bubble {
             background-color: rgba(18, 28, 45, 0.9); /* Azul oscuro para burbujas de mensaje */
             border-left: 3px solid #5E6A7A; /* Borde sutil en lugar de neón */
@@ -102,6 +106,15 @@
         .placeholder-gray-500::placeholder {
             color: #5E6A7A; /* Color de placeholder mate */
         }
+        .internal-panel {
+            background-color: #1A222E; /* Gris oscuro mate para los paneles internos */
+            border: 1px solid #2C3A4F; /* Borde más sutil */
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
+        #userId:hover {
+            color: #5E6A7A; /* Sutil cambio de color en lugar de neón */
+            background-color: rgba(44, 58, 79, 0.2);
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
@@ -116,7 +129,7 @@
             <p class="text-gray-400 mt-2 text-sm">Mensajes diseñados para desvanecerse.</p>
         </div>
 
-        <div class="bg-gray-900/50 p-4 rounded-lg text-center border border-gray-700">
+        <div class="p-4 rounded-lg text-center internal-panel">
             <p class="text-xs text-gray-500 mb-2">Tu Identificador de Enlace:</p>
             <div id="loading-spinner" class="flex justify-center items-center">
                 <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-subtle"></div>
@@ -146,7 +159,7 @@
 
         <div>
             <h2 class="text-xl font-semibold mb-4 border-b-2 border-gray-700 pb-2 text-subtle">Buzón Fantasma</h2>
-            <div id="messagesContainer" class="space-y-4 h-48 overflow-y-auto p-2 bg-gray-900/50 rounded-lg border border-gray-700">
+            <div id="messagesContainer" class="space-y-4 h-48 overflow-y-auto p-2 rounded-lg internal-panel">
                 <p id="no-messages" class="text-gray-600 text-center py-4">Esperando transmisiones...</p>
             </div>
         </div>
